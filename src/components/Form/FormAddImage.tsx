@@ -73,7 +73,10 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
   const mutation = useMutation(
     // DONE => MUTATION API POST REQUEST,
     async (data: DataResponse) => {
-      const response = await api.post('/api/images', data);
+      const response = await api.post('/api/images', {
+        ...data,
+        url: imageUrl,
+      });
       return response.data;
     },
     {
@@ -89,7 +92,7 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
 
   const { errors } = formState;
 
-  const onSubmit = async (data: Record<string, string>): Promise<void> => {
+  const onSubmit = async (data: DataResponse): Promise<void> => {
     try {
       // DONE => SHOW ERROR TOAST IF IMAGE URL DOES NOT EXISTS
       if (!imageUrl) {
@@ -104,14 +107,11 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
       }
 
       // DONE => EXECUTE ASYNC MUTATION
-      await mutation.mutateAsync({
-        imageUrl,
-        title: data.title,
-        description: data.description,
-      });
+      await mutation.mutateAsync(data);
 
       // DONE => SHOW SUCCESS TOAST
       toast({
+        status: 'success',
         title: 'Imagem cadastrada',
         description: 'Sua imagem foi cadastrada com sucesso.',
       });
