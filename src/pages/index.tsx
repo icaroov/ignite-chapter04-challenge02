@@ -1,6 +1,8 @@
-import { Button, Box } from '@chakra-ui/react';
 import { useMemo } from 'react';
+import { Button, Box } from '@chakra-ui/react';
 import { useInfiniteQuery } from 'react-query';
+
+import { ImagesQueryResponse } from './api/images';
 
 import { Header } from '../components/Header';
 import { CardList } from '../components/CardList';
@@ -18,18 +20,42 @@ export default function Home(): JSX.Element {
     hasNextPage,
   } = useInfiniteQuery(
     'images',
-    // TODO AXIOS REQUEST WITH PARAM
-    ,
-    // TODO GET AND RETURN NEXT PAGE PARAM
+    // DONE => AXIOS REQUEST WITH PARAM
+    async ({ pageParam = null }) => {
+      const response = await api.get('/api/images', {
+        params: {
+          after: pageParam?.after,
+        },
+      });
+
+      return response.data;
+    },
+    // DONE => GET AND RETURN NEXT PAGE PARAM
+    {
+      getNextPageParam: (lastPage: ImagesQueryResponse) =>
+        lastPage?.after ? lastPage : null,
+    }
   );
 
+  function message(): string {
+    if (isFetchingNextPage) return 'Carregando...';
+
+    if (hasNextPage) return 'Carregar mais';
+
+    return 'Nada para carregar';
+  }
+
   const formattedData = useMemo(() => {
-    // TODO FORMAT AND FLAT DATA ARRAY
+    // DONE => FORMAT AND FLAT DATA ARRAY
+    const result = data?.pages?.flatMap(page => page.data);
+    return result;
   }, [data]);
 
-  // TODO RENDER LOADING SCREEN
+  // DONE => RENDER LOADING SCREEN
+  if (isLoading) return <Loading />;
 
-  // TODO RENDER ERROR SCREEN
+  // DONE => RENDER ERROR SCREEN
+  if (isError) return <Error />;
 
   return (
     <>
@@ -37,7 +63,16 @@ export default function Home(): JSX.Element {
 
       <Box maxW={1120} px={20} mx="auto" my={20}>
         <CardList cards={formattedData} />
-        {/* TODO RENDER LOAD MORE BUTTON IF DATA HAS NEXT PAGE */}
+        {/* DONE => RENDER LOAD MORE BUTTON IF DATA HAS NEXT PAGE */}
+        {hasNextPage && (
+          <Button
+            isLoading={isFetchingNextPage}
+            disabled={!hasNextPage}
+            onClick={() => fetchNextPage()}
+          >
+            {message()}
+          </Button>
+        )}
       </Box>
     </>
   );
